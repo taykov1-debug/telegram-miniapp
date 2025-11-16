@@ -2,128 +2,80 @@
 <html>
 <head>
   <meta charset="UTF-8" />
-  <title>City Check</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>City Check Mini App</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
   <style>
-    body { font-family: Arial, sans-serif; margin:0; padding:20px; background:#f2f2f2; }
+    body { font-family: Arial, sans-serif; padding: 20px; background:#f5f5f5; }
     .btn {
-      padding:15px; background:#fff; margin:10px 0; border-radius:12px;
-      box-shadow:0 2px 6px rgba(0,0,0,0.1); font-size:18px; cursor:pointer;
+      padding: 15px;
+      background:#fff;
+      margin:10px 0;
+      border-radius:12px;
+      box-shadow:0 2px 6px rgba(0,0,0,0.1);
+      font-size:18px;
+      cursor:pointer;
     }
-    #backBtn { margin-bottom:20px; font-size:16px; cursor:pointer; color:#007aff; }
-    h2 { margin-top:0; }
+    #container { margin-top:20px; }
   </style>
 </head>
 
 <body>
+  <h2>Выберите тип проверки</h2>
 
-<h2 id="title">Выберите тип проверки</h2>
-<div id="backBtn" style="display:none;" onclick="goBack()">← Назад</div>
+  <div class="btn" onclick="startCheck('dt')">Дворовые территории (ДТ)</div>
+  <div class="btn" onclick="startCheck('odh')">ОДХ</div>
 
-<div id="menu"></div>
+  <div id="container"></div>
 
 <script>
-let state = "root";  
-let registry = null;  
-let currentType = null;  
-let currentOkrug = null;  
-let currentBalance = null;
+const BASE = "https://taykov1-debug.github.io/telegram-miniapp/data/";
 
-const menu = document.getElementById("menu");
-const title = document.getElementById("title");
-const backBtn = document.getElementById("backBtn");
-
-// --- 1. НАЧАЛЬНОЕ МЕНЮ ---
-function showRootMenu() {
-  state = "root";
-  backBtn.style.display = "none";
-  title.innerText = "Выберите тип проверки";
-  menu.innerHTML = `
-    <div class="btn" onclick="selectType('dt')">ДТ</div>
-    <div class="btn" onclick="selectType('odh')">ОДХ</div>
-  `;
+async function loadRegistry(type) {
+    const url = type === "dt" ? BASE + "dt.json" : BASE + "odh.json";
+    const response = await fetch(url);
+    return await response.json();
 }
 
-// --- 2. Выбор типа ---
-async function selectType(type) {
-  currentType = type;
-  state = "type";
-  backBtn.style.display = "block";
-  title.innerText = "Загружаем данные...";
+async function startCheck(type) {
+    document.getElementById("container").innerHTML = "<p>Загрузка данных...</p>";
 
-  const url = type === "dt" ? "data/dt.json" : "data/odh.json";
+    const data = await loadRegistry(type);
 
-  try {
-    const res = await fetch(url);
-    registry = await res.json();
-  } catch (e) {
-    title.innerText = "Ошибка загрузки!";
-    return;
-  }
+    // показываем список округов
+    let html = "<h3>Выберите округ</h3>";
+    Object.keys(data).forEach(okrug => {
+        html += `<div class='btn' onclick="selectOkrug('${type}','${okrug}')">${okrug}</div>`;
+    });
 
-  showOkrugs();
+    document.getElementById("container").innerHTML = html;
 }
 
-// --- 3. Округа ---
-function showOkrugs() {
-  state = "okrug";
-  title.innerText = "Выберите округ";
-  backBtn.style.display = "block";
+async function selectOkrug(type, okrug) {
+    const data = await loadRegistry(type);
+    const balans = data[okrug];
 
-  menu.innerHTML = "";
-  Object.keys(registry).forEach(ok => {
-    menu.innerHTML += `<div class="btn" onclick="selectOkrug('${ok}')">${ok}</div>`;
-  });
+    let html = `<h3>${okrug}. Выберите балансодержателя</h3>`;
+    Object.keys(balans).forEach(b => {
+        html += `<div class='btn' onclick="selectBalans('${type}','${okrug}','${b}')">${b}</div>`;
+    });
+
+    document.getElementById("container").innerHTML = html;
 }
 
-function selectOkrug(ok) {
-  currentOkrug = ok;
-  showBalances();
+async function selectBalans(type, okrug, balans) {
+    const data = await loadRegistry(type);
+    const addresses = data[okrug][balans];
+
+    let html = `<h3>${okrug} → ${balans}<br>Выберите адрес</h3>`;
+    addresses.forEach(addr => {
+        html += `<div class='btn'>${addr}</div>`;
+    });
+
+    document.getElementById("container").innerHTML = html;
 }
-
-// --- 4. Балансодержатели ---
-function showBalances() {
-  state = "balance";
-  title.innerText = "Выберите балансодержателя";
-
-  const balances = registry[currentOkrug];
-  menu.innerHTML = "";
-
-  Object.keys(balances).forEach(b => {
-    menu.innerHTML += `<div class="btn" onclick="selectBalance('${b}')">${b}</div>`;
-  });
-}
-
-function selectBalance(b) {
-  currentBalance = b;
-  showAddresses();
-}
-
-// --- 5. Адреса ---
-function showAddresses() {
-  state = "address";
-  title.innerText = "Выберите адрес";
-
-  const addresses = registry[currentOkrug][currentBalance];
-  menu.innerHTML = "";
-
-  addresses.forEach(a => {
-    menu.innerHTML += `<div class="btn">${a}</div>`;
-  });
-}
-
-// --- Кнопка назад ---
-function goBack() {
-  if (state === "okrug") return showRootMenu();
-  if (state === "balance") return showOkrugs();
-  if (state === "address") return showBalances();
-
-  showRootMenu();
-}
-
-showRootMenu();
 </script>
+
 </body>
 </html>
