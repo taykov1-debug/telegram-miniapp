@@ -1,166 +1,181 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>City Check</title>
+  <title>City Check Mini App</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
   <style>
     body {
-      margin: 0;
-      font-family: system-ui, Arial;
-      background: #f1f3f5;
+      font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif;
       padding: 20px;
+      background:#f2f2f7;
+      margin:0;
     }
 
     h2 {
-      margin-top: 0;
+      font-size: 26px;
+      font-weight: 700;
+      margin-bottom: 20px;
     }
 
     .card {
-      background: #fff;
-      padding: 15px 18px;
-      border-radius: 14px;
-      margin-bottom: 14px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.07);
-      cursor: pointer;
-      transition: 0.15s;
-      font-size: 18px;
+      padding: 18px;
+      background:#fff;
+      margin:12px 0;
+      border-radius:16px;
+      font-size:18px;
+      box-shadow:0 4px 12px rgba(0,0,0,0.08);
+      cursor:pointer;
+      transition:0.15s;
+    }
+    .card:active {
+      transform: scale(0.97);
+      background:#f0f0f0;
     }
 
-    .card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 12px rgba(0,0,0,0.10);
+    .hidden { display:none; }
+
+    .search-box {
+      width:100%;
+      padding:14px 16px;
+      font-size:18px;
+      border-radius:14px;
+      border:1px solid #ccc;
+      margin-bottom:15px;
     }
 
-    .hidden {
-      display: none;
+    .subtitle {
+      font-size:20px;
+      margin-top:10px;
+      font-weight:600;
     }
 
-    #searchBox {
-      width: 100%;
-      padding: 12px 14px;
-      border-radius: 12px;
-      border: 1px solid #bbb;
-      margin-bottom: 15px;
-      font-size: 16px;
-      outline: none;
-    }
-
-    #searchBox:focus {
-      border-color: #4a90e2;
-    }
   </style>
 </head>
-
 <body>
 
-  <h2 id="title">Выберите тип проверки</h2>
-  <div id="list"></div>
+<!-- 1. Выбор типа проверки -->
+<div id="screen-type">
+  <h2>Выберите тип проверки</h2>
 
-  <input id="searchBox" class="hidden" placeholder="Поиск адреса..." oninput="filterAddresses()" />
+  <div class="card" onclick="selectType('dt')">Дворовые территории (ДТ)</div>
+  <div class="card" onclick="selectType('odh')">ОДХ</div>
+</div>
 
-  <script>
-    const listEl = document.getElementById("list");
-    const titleEl = document.getElementById("title");
-    const searchBox = document.getElementById("searchBox");
+<!-- 2. Округ → Балансодержатель -->
+<div id="screen-bal" class="hidden">
+  <h2 id="title-bal">Выберите округ</h2>
+  <div id="bal-list"></div>
+</div>
 
-    let currentType = null;
-    let registryData = {};
-    let selectedOkrug = null;
-    let selectedBalance = null;
-    let addresses = [];
+<!-- 3. Адреса -->
+<div id="screen-address" class="hidden">
+  <h2 id="title-address"></h2>
 
-    start();
+  <input class="search-box" id="search" placeholder="Поиск адреса..." oninput="filterAddresses()"/>
 
-    function start() {
-      titleEl.textContent = "Выберите тип проверки";
-      searchBox.classList.add("hidden");
-      render([
-        { id: "dt", name: "Дворовые территории" },
-        { id: "odh", name: "ОДХ" },
-      ], selectType);
-    }
+  <div id="addr-list"></div>
+</div>
 
-    function render(items, handler) {
-      listEl.innerHTML = "";
-      items.forEach(item => {
-        const div = document.createElement("div");
-        div.className = "card";
-        div.textContent = item.name;
-        div.onclick = () => handler(item.id || item.name, item.name);
-        listEl.appendChild(div);
-      });
-    }
 
-    async function selectType(type) {
-      currentType = type;
-      titleEl.textContent = "Загрузка реестра...";
 
-      const url = type === "dt" ? "data/dt.json" : "data/odh.json";
-      registryData = await fetch(url).then(r => r.json());
+<script>
+let registry = {};
+let selectedType = "";
+let selectedOkrug = "";
+let selectedBal = "";
+let fullAddressList = [];
 
-      showOkrugs();
-    }
+// Загрузка реестров
+async function loadRegistry(type) {
+  const file = type === "dt" ? "data/dt.json" : "data/odh.json";
+  const response = await fetch(file);
+  return await response.json();
+}
 
-    function showOkrugs() {
-      titleEl.textContent = "Выберите округ";
-      searchBox.classList.add("hidden");
+// Пользователь выбрал тип проверки
+async function selectType(type) {
+  registry = await loadRegistry(type);
+  selectedType = type;
 
-      const items = Object.keys(registryData).map(ok => ({
-        id: ok,
-        name: ok
-      }));
+  document.getElementById("screen-type").classList.add("hidden");
+  document.getElementById("screen-bal").classList.remove("hidden");
 
-      render(items, selectOkrug);
-    }
+  loadOkrugs();
+}
 
-    function selectOkrug(ok) {
-      selectedOkrug = ok;
-      const balances = registryData[ok];
+// Показать список округов
+function loadOkrugs() {
+  const container = document.getElementById("bal-list");
+  container.innerHTML = "";
 
-      titleEl.textContent = "Выберите балансодержателя";
+  Object.keys(registry).forEach(okrug => {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerText = okrug;
+    card.onclick = () => selectOkrug(okrug);
+    container.appendChild(card);
+  });
+}
 
-      const items = Object.keys(balances).map(b => ({
-        id: b,
-        name: b
-      }));
+// Выбор округа → показываем балансодержателей
+function selectOkrug(okrug) {
+  selectedOkrug = okrug;
 
-      render(items, selectBalance);
-    }
+  const container = document.getElementById("bal-list");
+  container.innerHTML = "";
+  document.getElementById("title-bal").innerText = okrug + " → Выберите балансодержателя";
 
-    function selectBalance(bal) {
-      selectedBalance = bal;
-      addresses = registryData[selectedOkrug][selectedBalance];
+  Object.keys(registry[okrug]).forEach(bal => {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerText = bal;
+    card.onclick = () => selectBal(bal);
+    container.appendChild(card);
+  });
+}
 
-      titleEl.textContent = "Выберите адрес";
-      searchBox.classList.remove("hidden");
+// Выбор балансодержателя → показываем адреса + поиск
+function selectBal(bal) {
+  selectedBal = bal;
 
-      renderAddresses(addresses);
-    }
+  fullAddressList = registry[selectedOkrug][selectedBal];
 
-    function renderAddresses(list) {
-      listEl.innerHTML = "";
+  document.getElementById("screen-bal").classList.add("hidden");
+  document.getElementById("screen-address").classList.remove("hidden");
 
-      list.forEach(addr => {
-        const div = document.createElement("div");
-        div.className = "card";
-        div.textContent = addr;
-        div.onclick = () => submitAddress(addr);
-        listEl.appendChild(div);
-      });
-    }
+  document.getElementById("title-address").innerText =
+    `${selectedOkrug} → ${selectedBal}\nВыберите адрес`;
 
-    function filterAddresses() {
-      const term = searchBox.value.toLowerCase();
-      const filtered = addresses.filter(a => a.toLowerCase().includes(term));
-      renderAddresses(filtered);
-    }
+  renderAddresses(fullAddressList);
+}
 
-    function submitAddress(addr) {
-      Telegram.WebApp.close();
-    }
-  </script>
+// Отрисовать список адресов
+function renderAddresses(list) {
+  const container = document.getElementById("addr-list");
+  container.innerHTML = "";
+
+  list.forEach(addr => {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerText = addr;
+    container.appendChild(card);
+  });
+}
+
+// Поиск только по адресам
+function filterAddresses() {
+  const q = document.getElementById("search").value.toLowerCase().trim();
+
+  const filtered = fullAddressList.filter(addr =>
+    addr.toLowerCase().includes(q)
+  );
+
+  renderAddresses(filtered);
+}
+</script>
+
 </body>
 </html>
