@@ -18,6 +18,7 @@
       font-size: 26px;
       font-weight: 700;
       margin-bottom: 20px;
+      white-space: pre-line;
     }
 
     .card {
@@ -57,6 +58,28 @@
       font-size: 17px;
       display: none;
     }
+
+    #photoSection {
+      display: none;
+      margin-top: 20px;
+    }
+
+    #photoPreview {
+      width: 100%;
+      border-radius: 14px;
+      margin-top: 15px;
+      display: none;
+    }
+
+    .photoBtn {
+      background: #ffffff;
+      border-radius: 14px;
+      padding: 14px 20px;
+      font-size: 18px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+      margin-bottom: 12px;
+      cursor: pointer;
+    }
   </style>
 </head>
 
@@ -70,12 +93,24 @@
 
   <div id="content"></div>
 
+  <!-- PHOTO SECTION -->
+  <div id="photoSection">
+      <div class="photoBtn" onclick="document.getElementById('photoInput').click()">
+          📸 Сделать фото / Выбрать файл
+      </div>
+
+      <input type="file" accept="image/*" capture="environment" id="photoInput" style="display:none" onchange="handlePhoto(event)">
+      <img id="photoPreview">
+  </div>
+
 <script>
 let step = "type";
 let selectedType = "";
 let selectedOkrug = "";
 let selectedBalance = "";
+let selectedAddress = "";
 let registry = {};
+let addressList = [];
 
 function showBack(show) {
     document.getElementById("backBtn").style.display = show ? "block" : "none";
@@ -98,6 +133,8 @@ function createCard(text, onclick) {
 }
 
 function goBack() {
+    document.getElementById("photoSection").style.display = "none";
+
     if (step === "okrug") {
         step = "type";
         showStartMenu();
@@ -107,12 +144,17 @@ function goBack() {
     } else if (step === "address") {
         step = "balance";
         showBalances();
+    } else if (step === "photo") {
+        step = "address";
+        showAddresses();
     }
 }
 
 function showStartMenu() {
     showBack(false);
     document.getElementById("searchBox").style.display = "none";
+    document.getElementById("photoSection").style.display = "none";
+
     setTitle("Выберите тип проверки");
     clearContent();
 
@@ -139,6 +181,7 @@ async function loadRegistry(type, path) {
 function showOkrugs() {
     showBack(true);
     document.getElementById("searchBox").style.display = "none";
+    document.getElementById("photoSection").style.display = "none";
 
     setTitle("Выберите округ");
     clearContent();
@@ -168,18 +211,16 @@ function showBalances() {
     });
 }
 
-let addressList = [];
-
 function showAddresses() {
     showBack(true);
     setTitle(selectedOkrug + " → " + selectedBalance + "\nВыберите адрес");
 
     document.getElementById("searchBox").style.display = "block";
+    document.getElementById("photoSection").style.display = "none";
 
     clearContent();
 
     addressList = registry[selectedOkrug][selectedBalance];
-
     renderAddressList(addressList);
 }
 
@@ -187,7 +228,9 @@ function renderAddressList(list) {
     clearContent();
     list.forEach(addr => {
         content.appendChild(createCard(addr, () => {
-            Telegram.WebApp.close(); 
+            selectedAddress = addr;
+            step = "photo";
+            showPhotoUpload();
         }));
     });
 }
@@ -196,6 +239,64 @@ function filterAddresses() {
     const q = document.getElementById("searchBox").value.toLowerCase().trim();
     const filtered = addressList.filter(a => a.toLowerCase().includes(q));
     renderAddressList(filtered);
+}
+
+/* ---------------- PHOTO + TIMESTAMP ---------------- */
+
+function showPhotoUpload() {
+    setTitle("Адрес выбран:\n" + selectedAddress + "\nДобавьте фото");
+
+    clearContent();
+    document.getElementById("searchBox").style.display = "none";
+
+    document.getElementById("photoSection").style.display = "block";
+}
+
+function handlePhoto(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const img = new Image();
+    const reader = new FileReader();
+
+    reader.onload = e => {
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+
+    img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+
+        canvas.width = img.width;
+        canvas.height = img.height;
+
+        ctx.drawImage(img, 0, 0);
+
+        // timestamp
+        const now = new Date();
+        const stamp =
+            String(now.getDate()).padStart(2, '0') + "." +
+            String(now.getMonth()+1).padStart(2, '0') + "." +
+            now.getFullYear() + " " +
+            String(now.getHours()).padStart(2, '0') + ":" +
+            String(now.getMinutes()).padStart(2, '0') + ":" +
+            String(now.getSeconds()).padStart(2, '0');
+
+        ctx.font = `${img.width / 25}px Arial`;
+        ctx.fillStyle = "red";
+        ctx.textAlign = "right";
+        ctx.fillText(stamp, img.width - 40, img.height - 40);
+
+        const result = canvas.toDataURL("image/jpeg", 0.9);
+
+        const preview = document.getElementById("photoPreview");
+        preview.src = result;
+        preview.style.display = "block";
+
+        // готово → можно отправлять в Google Sheets, через бота и т.д.
+        console.log("Готовое фото base64:", result.substring(0,100) + "...");
+    };
 }
 
 showStartMenu();
