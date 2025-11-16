@@ -9,24 +9,117 @@
     body { font-family: Arial, sans-serif; padding: 20px; background:#f5f5f5; }
     .btn { padding: 15px; background:#fff; margin:10px 0; border-radius:12px;
            box-shadow:0 2px 6px rgba(0,0,0,0.1); font-size:18px; cursor:pointer; }
+    #list { margin-top:20px; }
   </style>
 </head>
 <body>
-  <h2>Выберите тип проверки</h2>
 
-  <div class="btn" onclick="openCheck('ДТ')">Дворовые территории</div>
-  <div class="btn" onclick="openCheck('ОДХ')">ОДХ</div>
-  <div class="btn" onclick="openCheck('ВнеулПереходы')">Внеуличные переходы</div>
-  <div class="btn" onclick="openCheck('Мосты')">Мосты</div>
-  <div class="btn" onclick="openCheck('Техника')">Техника</div>
-  <div class="btn" onclick="openCheck('Цветники')">Цветники</div>
+  <h2 id="title">Выберите тип проверки</h2>
 
- <script>
+  <div id="menu">
+      <div class="btn" onclick="selectType('dt')">ДТ</div>
+      <div class="btn" onclick="selectType('odh')">ОДХ</div>
+  </div>
+
+  <div id="list"></div>
+
+
+<script>
+let registryData = null;
+let selectedType = null;
+let selectedOkrug = null;
+let selectedBal = null;
+
+//
+// 1. Выбор типа проверки (ДТ / ОДХ)
+//
+async function selectType(type) {
+    selectedType = type;
+    document.getElementById("title").innerText = "Загрузка...";
+
+    registryData = await loadRegistry(type);
+
+    document.getElementById("title").innerText = "Выберите округ";
+    showOkrugs();
+}
+
+//
+// Загружаем JSON
+//
 async function loadRegistry(type) {
     const url = type === "dt" ? "data/dt.json" : "data/odh.json";
     const response = await fetch(url);
     return await response.json();
 }
+
+//
+// 2. Показываем ОКРУГА
+//
+function showOkrugs() {
+    const list = document.getElementById("list");
+    list.innerHTML = "";
+
+    Object.keys(registryData).forEach(ok => {
+        const btn = document.createElement("div");
+        btn.className = "btn";
+        btn.innerText = ok;
+        btn.onclick = () => selectOkrug(ok);
+        list.appendChild(btn);
+    });
+}
+
+//
+// 3. Пользователь выбрал ОКРУГ — показываем балансодержателей
+//
+function selectOkrug(ok) {
+    selectedOkrug = ok;
+    document.getElementById("title").innerText = "Выберите балансодержателя";
+
+    const list = document.getElementById("list");
+    list.innerHTML = "";
+
+    Object.keys(registryData[ok]).forEach(bal => {
+        const btn = document.createElement("div");
+        btn.className = "btn";
+        btn.innerText = bal;
+        btn.onclick = () => selectBal(bal);
+        list.appendChild(btn);
+    });
+}
+
+//
+// 4. Пользователь выбрал Балансодержателя — показываем адреса
+//
+function selectBal(bal) {
+    selectedBal = bal;
+
+    document.getElementById("title").innerText = "Выберите адрес";
+
+    const list = document.getElementById("list");
+    list.innerHTML = "";
+
+    registryData[selectedOkrug][bal].forEach(addr => {
+        const btn = document.createElement("div");
+        btn.className = "btn";
+        btn.innerText = addr;
+        btn.onclick = () => openAddress(addr);
+        list.appendChild(btn);
+    });
+}
+
+//
+// 5. Пользователь выбрал адрес — далее будет форма проверки
+//
+function openAddress(address) {
+    alert(
+        "Тип: " + selectedType +
+        "\nОкруг: " + selectedOkrug +
+        "\nБалансодержатель: " + selectedBal +
+        "\nАдрес: " + address +
+        "\n\nЗдесь будет форма проверки."
+    );
+}
 </script>
+
 </body>
 </html>
