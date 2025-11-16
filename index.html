@@ -21,10 +21,12 @@
   <div class="btn" onclick="openCheck('Техника')">Техника</div>
   <div class="btn" onclick="openCheck('Цветники')">Цветники</div>
 
-  <script>
-    function openCheck(type) {
-      Telegram.WebApp.sendData(JSON.stringify({ action: "select_type", check: type }));
-    }
-  </script>
+ <script>
+async function loadRegistry(type) {
+    const url = type === "dt" ? "data/dt.json" : "data/odh.json";
+    const response = await fetch(url);
+    return await response.json();
+}
+</script>
 </body>
 </html>
