@@ -1,81 +1,166 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <title>City Check Mini App</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>City Check</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; background:#f5f5f5; }
-    .btn {
-      padding: 15px;
-      background:#fff;
-      margin:10px 0;
-      border-radius:12px;
-      box-shadow:0 2px 6px rgba(0,0,0,0.1);
-      font-size:18px;
-      cursor:pointer;
+    body {
+      margin: 0;
+      font-family: system-ui, Arial;
+      background: #f1f3f5;
+      padding: 20px;
     }
-    #container { margin-top:20px; }
+
+    h2 {
+      margin-top: 0;
+    }
+
+    .card {
+      background: #fff;
+      padding: 15px 18px;
+      border-radius: 14px;
+      margin-bottom: 14px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.07);
+      cursor: pointer;
+      transition: 0.15s;
+      font-size: 18px;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.10);
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    #searchBox {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid #bbb;
+      margin-bottom: 15px;
+      font-size: 16px;
+      outline: none;
+    }
+
+    #searchBox:focus {
+      border-color: #4a90e2;
+    }
   </style>
 </head>
 
 <body>
-  <h2>Выберите тип проверки</h2>
 
-  <div class="btn" onclick="startCheck('dt')">Дворовые территории (ДТ)</div>
-  <div class="btn" onclick="startCheck('odh')">ОДХ</div>
+  <h2 id="title">Выберите тип проверки</h2>
+  <div id="list"></div>
 
-  <div id="container"></div>
+  <input id="searchBox" class="hidden" placeholder="Поиск адреса..." oninput="filterAddresses()" />
 
-<script>
-const BASE = "https://taykov1-debug.github.io/telegram-miniapp/data/";
+  <script>
+    const listEl = document.getElementById("list");
+    const titleEl = document.getElementById("title");
+    const searchBox = document.getElementById("searchBox");
 
-async function loadRegistry(type) {
-    const url = type === "dt" ? BASE + "dt.json" : BASE + "odh.json";
-    const response = await fetch(url);
-    return await response.json();
-}
+    let currentType = null;
+    let registryData = {};
+    let selectedOkrug = null;
+    let selectedBalance = null;
+    let addresses = [];
 
-async function startCheck(type) {
-    document.getElementById("container").innerHTML = "<p>Загрузка данных...</p>";
+    start();
 
-    const data = await loadRegistry(type);
+    function start() {
+      titleEl.textContent = "Выберите тип проверки";
+      searchBox.classList.add("hidden");
+      render([
+        { id: "dt", name: "Дворовые территории" },
+        { id: "odh", name: "ОДХ" },
+      ], selectType);
+    }
 
-    // показываем список округов
-    let html = "<h3>Выберите округ</h3>";
-    Object.keys(data).forEach(okrug => {
-        html += `<div class='btn' onclick="selectOkrug('${type}','${okrug}')">${okrug}</div>`;
-    });
+    function render(items, handler) {
+      listEl.innerHTML = "";
+      items.forEach(item => {
+        const div = document.createElement("div");
+        div.className = "card";
+        div.textContent = item.name;
+        div.onclick = () => handler(item.id || item.name, item.name);
+        listEl.appendChild(div);
+      });
+    }
 
-    document.getElementById("container").innerHTML = html;
-}
+    async function selectType(type) {
+      currentType = type;
+      titleEl.textContent = "Загрузка реестра...";
 
-async function selectOkrug(type, okrug) {
-    const data = await loadRegistry(type);
-    const balans = data[okrug];
+      const url = type === "dt" ? "data/dt.json" : "data/odh.json";
+      registryData = await fetch(url).then(r => r.json());
 
-    let html = `<h3>${okrug}. Выберите балансодержателя</h3>`;
-    Object.keys(balans).forEach(b => {
-        html += `<div class='btn' onclick="selectBalans('${type}','${okrug}','${b}')">${b}</div>`;
-    });
+      showOkrugs();
+    }
 
-    document.getElementById("container").innerHTML = html;
-}
+    function showOkrugs() {
+      titleEl.textContent = "Выберите округ";
+      searchBox.classList.add("hidden");
 
-async function selectBalans(type, okrug, balans) {
-    const data = await loadRegistry(type);
-    const addresses = data[okrug][balans];
+      const items = Object.keys(registryData).map(ok => ({
+        id: ok,
+        name: ok
+      }));
 
-    let html = `<h3>${okrug} → ${balans}<br>Выберите адрес</h3>`;
-    addresses.forEach(addr => {
-        html += `<div class='btn'>${addr}</div>`;
-    });
+      render(items, selectOkrug);
+    }
 
-    document.getElementById("container").innerHTML = html;
-}
-</script>
+    function selectOkrug(ok) {
+      selectedOkrug = ok;
+      const balances = registryData[ok];
 
+      titleEl.textContent = "Выберите балансодержателя";
+
+      const items = Object.keys(balances).map(b => ({
+        id: b,
+        name: b
+      }));
+
+      render(items, selectBalance);
+    }
+
+    function selectBalance(bal) {
+      selectedBalance = bal;
+      addresses = registryData[selectedOkrug][selectedBalance];
+
+      titleEl.textContent = "Выберите адрес";
+      searchBox.classList.remove("hidden");
+
+      renderAddresses(addresses);
+    }
+
+    function renderAddresses(list) {
+      listEl.innerHTML = "";
+
+      list.forEach(addr => {
+        const div = document.createElement("div");
+        div.className = "card";
+        div.textContent = addr;
+        div.onclick = () => submitAddress(addr);
+        listEl.appendChild(div);
+      });
+    }
+
+    function filterAddresses() {
+      const term = searchBox.value.toLowerCase();
+      const filtered = addresses.filter(a => a.toLowerCase().includes(term));
+      renderAddresses(filtered);
+    }
+
+    function submitAddress(addr) {
+      Telegram.WebApp.close();
+    }
+  </script>
 </body>
 </html>
