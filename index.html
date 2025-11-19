@@ -425,7 +425,7 @@ async function sendReport(addr){
     photo_base64: currentPreviewDataUrl
   };
 
-  const webhook = "https://script.google.com/macros/s/AKfycbwwPIpTc17UVyIw_VRVtcEn7MJnHX49sQD9FEDf87JXynQ2mO0XRTw_E6dFQqFEsh0/exec";
+  const webhook = "https://script.google.com/macros/s/AKfycbxUZYGtnjnv6wX7imt4wWsw1IHkOD-A_SNlUdY1yRfXksTF_gylle6mlgRZztNyPQ/exec";
   if (!webhook){
     console.log('Payload (test):', payload);
     alert('Данные собраны локально (тест). Для отправки укажи ?webhook=YOUR_URL в ссылке мини-аппа.');
