@@ -146,16 +146,22 @@ function showStart(){
 /* ====== Load registry JSON ====== */
 async function loadRegistry(type){
   selectedType = type;
-  const path = (type === 'ДТ') ? '/data/dt.json' : '/data/odh.json';
+
+  const path = type === 'ДТ'
+      ? 'data/dt.json'
+      : 'data/odh.json';
+
   setTitle('Загрузка реестра...');
   try {
-    const res = await fetch(path, {cache:'no-store'});
-    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const res = await fetch(path);
+    if (!res.ok) throw new Error('Не удалось загрузить реестр: ' + res.status);
     registry = await res.json();
-    selectedOkrug = ""; selectedBalance = ""; addressList = [];
+    selectedOkrug = "";
+    selectedBalance = "";
+    addressList = [];
     showOkrugs();
-  } catch(err){
-    alert('Ошибка загрузки реестра: ' + err.message + '. Проверь путь /data/dt.json и /data/odh.json и подожди обновления GitHub Pages.');
+  } catch(err) {
+    alert('Ошибка загрузки реестра: ' + err.message + '. Файл не найден: ' + path);
     showStart();
   }
 }
