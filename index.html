@@ -5,77 +5,66 @@
   <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover" />
   <title>City Check — MiniApp (Dark)</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
   <style>
     :root{
       --bg:#0b0b0c;
       --card:#0f1113;
       --muted:#9aa0a6;
-      --accent:#06b6a4;
+      --accent:#0ea5a1;
       --text:#e6eef3;
       --glass: rgba(255,255,255,0.03);
       --radius:12px;
     }
-    html,body{height:100%;margin:0;background:linear-gradient(180deg,#070708 0%, #0b0b0c 100%);color:var(--text);font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;}
-    .wrap{max-width:920px;margin:0 auto;padding:16px;box-sizing:border-box;}
+    html,body{height:100%;margin:0;background:linear-gradient(180deg,#070708 0%, #0b0b0c 100%);color:var(--text);font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial;-webkit-font-smoothing:antialiased;}
+    .wrap{max-width:980px;margin:12px auto;padding:calc(env(safe-area-inset-top) + 14px) 14px 24px;}
     header{display:flex;align-items:center;gap:12px;margin-bottom:8px}
-    #backBtn{display:none;padding:8px 10px;background:rgba(255,255,255,0.03);border-radius:10px;cursor:pointer;box-shadow:0 6px 14px rgba(0,0,0,0.6);font-weight:600}
-    h1{font-size:18px;margin:0;font-weight:700;line-height:1.05}
-    .subtitle{font-size:13px;color:var(--muted);margin-top:2px}
+    #backBtn{display:none;padding:8px 12px;background:var(--card);border-radius:10px;cursor:pointer;box-shadow:0 6px 14px rgba(0,0,0,0.6);font-weight:600}
+    h1{font-size:18px;margin:0;font-weight:700}
+    .subtitle{font-size:13px;color:var(--muted);margin-top:4px}
 
-    .grid {display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-top:12px}
-    .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:12px;border-radius:14px;box-shadow:0 6px 18px rgba(2,6,23,0.6);cursor:pointer;transition:transform .12s ease,box-shadow .12s ease}
+    .grid {display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:14px}
+    .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:12px;border-radius:var(--radius);box-shadow:0 6px 18px rgba(2,6,23,0.6);cursor:pointer;transition:transform .12s ease, box-shadow .12s ease}
     .card:active{transform:scale(.995)}
-    .card .title{font-weight:700;font-size:14px}
+    .card .title{font-weight:600;font-size:15px}
     .card .hint{font-size:12px;color:var(--muted);margin-top:6px}
 
-    /* Address list view */
-    #searchWrap{display:none;margin-top:12px}
-    #searchBox{width:100%;padding:12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,0.04);background:var(--card);color:var(--text);box-sizing:border-box;font-size:15px}
-    .list{margin-top:10px}
-    .list-item{padding:12px;border-radius:12px;background:var(--glass);margin-bottom:8px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:background .12s}
-    .list-item:hover{background:rgba(255,255,255,0.02)}
-    .name{font-size:15px}
+    #searchBox{display:none;width:100%;padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,0.04);background:var(--card);color:var(--text);box-sizing:border-box;margin:14px 0;font-size:15px}
+    .list{margin-top:8px}
+    .list-item{padding:10px 12px;border-radius:10px;background:var(--glass);margin-bottom:8px;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+    .list-item .name{font-size:15px}
     .tiny{font-size:12px;color:var(--muted)}
-
-    /* Report form */
-    .form-row{margin-top:12px}
-    select, textarea, input[type=text]{width:100%;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.035);background:var(--card);color:var(--text);box-sizing:border-box;font-size:14px}
 
     /* Photo area */
     .photo-row{display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap}
-    .photo-preview{width:96px;height:96px;border-radius:10px;overflow:hidden;background:#111;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,0.03)}
+    .photo-preview{width:110px;height:110px;border-radius:8px;overflow:hidden;background:#111;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,0.03)}
     .photo-preview img{width:100%;height:100%;object-fit:cover;display:block}
-    .btn{padding:10px 12px;border-radius:10px;background:linear-gradient(180deg,var(--accent),#03836f);color:#022;cursor:pointer;border:none;font-weight:700}
-    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.05);color:var(--text)}
+    .btn{padding:10px 12px;border-radius:12px;background:linear-gradient(180deg,#0ea5a1,#049386);color:#042;cursor:pointer;border:none;font-weight:600}
+    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--text)}
+    .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 
-    .row{display:flex;gap:8px;align-items:center}
-    footer{margin-top:18px;text-align:center;color:var(--muted);font-size:13px;padding-bottom:20px}
-
-    /* For small phones: compact */
     @media (max-width:420px){
-      .wrap{padding:12px}
+      .grid{grid-template-columns:repeat(2,1fr)}
+      .wrap{padding:calc(env(safe-area-inset-top) + 10px) 12px 20px}
       h1{font-size:16px}
-      .card .title{font-size:13px}
-      #searchBox{padding:10px}
-      .photo-preview{width:80px;height:80px}
+      #searchBox{font-size:14px}
+      .photo-preview{width:86px;height:86px}
     }
+
+    footer{margin-top:18px;text-align:center;color:var(--muted);font-size:13px}
   </style>
 </head>
 <body>
   <div class="wrap">
     <header>
       <div id="backBtn" onclick="goBack()">← Назад</div>
-      <div>
+      <div style="flex:1">
         <h1 id="title">Выберите тип проверки</h1>
         <div class="subtitle" id="subtitle">Быстрое оформление нарушений — фото с timestamp</div>
       </div>
     </header>
 
-    <!-- Search area (shown on addresses) -->
-    <div id="searchWrap"><input id="searchBox" placeholder="Поиск по адресам…" oninput="onSearchInput()" /></div>
+    <input id="searchBox" placeholder="Поиск по адресам…" oninput="filterAddresses()" autocomplete="off" />
 
-    <!-- Main content -->
     <div id="content">
       <div class="grid" id="startGrid">
         <div class="card" onclick="loadRegistry('ДТ')"><div class="title">ДТ — Дворовые территории</div><div class="hint">Проверки дворов</div></div>
@@ -87,50 +76,56 @@
       </div>
     </div>
 
-    <!-- Hidden file input -->
-    <input id="fileInput" accept="image/*" type="file" style="display:none" />
+    <!-- hidden input -->
+    <input id="fileInput" accept="image/*" type="file" style="display:none"/>
 
-    <footer>Работает в Telegram Mini App и в браузере. Фото получают timestamp при добавлении.</footer>
+    <footer>Работает в браузере и в Telegram Mini App. Фото получают timestamp при добавлении.</footer>
   </div>
 
 <script>
-/* ====== Globals ====== */
+/* ===== Globals ===== */
 let registry = {};
 let selectedType = "";
 let selectedOkrug = "";
 let selectedBalance = "";
 let addressList = [];
 let currentPreviewDataUrl = "";
-let lastSearchTimer = null;
 
 const content = document.getElementById('content');
 const backBtn = document.getElementById('backBtn');
 const titleEl = document.getElementById('title');
-const searchWrap = document.getElementById('searchWrap');
 const searchBox = document.getElementById('searchBox');
 const fileInput = document.getElementById('fileInput');
+const telegram = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
 
-/* ====== Helpers ====== */
-function showBack(on){ backBtn.style.display = on ? 'block' : 'none'; }
+/* Platform detect */
+const ua = navigator.userAgent || '';
+function isIOS(){ return /iPad|iPhone|iPod/.test(ua) && !window.MSStream; }
+function isAndroid(){ return /Android/.test(ua); }
+
+/* UI helpers */
+function showBack(on){ backBtn.style.display = on ? 'inline-block' : 'none'; }
 function setTitle(t){ titleEl.textContent = t; }
-function escapeHtml(text){ return (''+text).replace(/'/g,"\\'").replace(/"/g,'\\"'); }
-function getQueryParam(name){ return new URLSearchParams(location.search).get(name); }
 
-/* ====== Navigation ====== */
 function goBack(){
   if (!selectedType) return;
-  if (document.getElementById('addrList')) { showBalances(); return; } // were in addresses
+  if (searchBox.style.display === 'block' && addressList.length) { showBalances(); return; }
   if (selectedBalance) { selectedBalance = ""; showBalances(); return; }
   if (selectedOkrug) { selectedOkrug = ""; showOkrugs(); return; }
   // root
-  selectedType = ""; registry = {}; addressList = []; selectedOkrug = ""; selectedBalance = "";
+  selectedType = "";
+  registry = {};
+  addressList = [];
+  selectedOkrug = "";
+  selectedBalance = "";
   showStart();
 }
 
+/* Start */
 function showStart(){
   showBack(false);
-  setTitle('Выберите тип проверки');
-  searchWrap.style.display='none';
+  setTitle("Выберите тип проверки");
+  searchBox.style.display = 'none';
   content.innerHTML = `
     <div class="grid" id="startGrid">
       <div class="card" onclick="loadRegistry('ДТ')"><div class="title">ДТ — Дворовые территории</div><div class="hint">Проверки дворов</div></div>
@@ -143,67 +138,82 @@ function showStart(){
   `;
 }
 
-/* ====== Load registry JSON ====== */
+/* Load registry (dt/odh) from /data/ — убедись, что dt.json/odh.json в /data/ (как в репо). */
 async function loadRegistry(type){
   selectedType = type;
-
-  const path = type === 'ДТ'
-      ? 'data/dt.json'
-      : 'data/odh.json';
-
+  const path = type === 'ДТ' ? '/data/dt.json' : '/data/odh.json';
   setTitle('Загрузка реестра...');
   try {
-    const res = await fetch(path);
-    if (!res.ok) throw new Error('Не удалось загрузить реестр: ' + res.status);
+    const res = await fetch(path, {cache:'no-cache'});
+    if (!res.ok) throw new Error('HTTP ' + res.status);
     registry = await res.json();
     selectedOkrug = "";
     selectedBalance = "";
     addressList = [];
     showOkrugs();
-  } catch(err) {
-    alert('Ошибка загрузки реестра: ' + err.message + '. Файл не найден: ' + path);
+  } catch(e){
+    alert('Ошибка загрузки реестра: ' + e.message + '. Проверь путь /data/ и наличие dt.json/odh.json.');
     showStart();
   }
 }
 
-/* ====== Okrugs ====== */
+/* Show okrugs */
 function showOkrugs(){
   showBack(true);
-  setTitle(selectedType + ' → Выберите округ');
-  searchWrap.style.display='none';
+  setTitle(`${selectedType} → Выберите округ`);
+  searchBox.style.display = 'none';
+  content.innerHTML = '<div class="list"></div>';
+  const listEl = content.querySelector('.list');
   const okrugs = Object.keys(registry).sort();
-  const html = `<div class="list" id="okrugsList">${okrugs.map(o => `<div class="list-item" data-ok="${escapeHtml(o)}"><div class="name">${o}</div><div class="tiny">→</div></div>`).join('')}</div>`;
-  content.innerHTML = html;
-  document.querySelectorAll('#okrugsList .list-item').forEach(el => el.onclick = () => { selectedOkrug = el.dataset.ok; showBalances(); });
+  if (okrugs.length === 0) {
+    listEl.innerHTML = '<div class="tiny">Округов нет в реестре.</div>';
+    return;
+  }
+  okrugs.forEach(ok => {
+    const div = document.createElement('div');
+    div.className = 'list-item';
+    div.innerHTML = `<div class="name">${ok}</div><div class="tiny">→</div>`;
+    div.onclick = () => { selectedOkrug = ok; showBalances(); };
+    listEl.appendChild(div);
+  });
 }
 
-/* ====== Balances ====== */
+/* Show balances */
 function showBalances(){
   showBack(true);
-  setTitle(selectedType + ' → ' + selectedOkrug + ' → Балансодержатель');
-  searchWrap.style.display='none';
-  const balances = Object.keys(registry[selectedOkrug]||{}).sort();
-  const html = `<div class="list" id="balancesList">${balances.map(b => `<div class="list-item" data-b="${escapeHtml(b)}"><div class="name">${b}</div><div class="tiny">${(registry[selectedOkrug][b]||[]).length} адресов</div></div>`).join('')}</div>`;
-  content.innerHTML = html;
-  document.querySelectorAll('#balancesList .list-item').forEach(el => el.onclick = () => { selectedBalance = el.dataset.b; addressList = registry[selectedOkrug][selectedBalance] || []; showAddresses(); });
+  setTitle(`${selectedType} → ${selectedOkrug} → Балансодержатель`);
+  searchBox.style.display = 'none';
+  content.innerHTML = '<div class="list"></div>';
+  const listEl = content.querySelector('.list');
+  const balances = Object.keys(registry[selectedOkrug] || {}).sort();
+  if (balances.length === 0){ listEl.innerHTML = '<div class="tiny">Балансодержателей нет.</div>'; return; }
+  balances.forEach(b => {
+    const div = document.createElement('div');
+    div.className = 'list-item';
+    const count = (registry[selectedOkrug][b]||[]).length;
+    div.innerHTML = `<div class="name">${b}</div><div class="tiny">${count} адресов</div>`;
+    div.onclick = () => { selectedBalance = b; addressList = registry[selectedOkrug][b] || []; showAddresses(); };
+    listEl.appendChild(div);
+  });
 }
 
-/* ====== Addresses (with search) ====== */
+/* Show addresses with search */
 function showAddresses(){
   showBack(true);
-  setTitle(selectedType + ' → ' + selectedOkrug + ' → ' + selectedBalance);
-  searchWrap.style.display='block';
+  setTitle(`${selectedType} → ${selectedOkrug} → ${selectedBalance}`);
+  searchBox.style.display = 'block';
   searchBox.value = '';
-  content.innerHTML = `<div id="addrList" class="list"></div>`;
+  content.innerHTML = `
+    <div id="addrList" class="list"></div>
+    <div style="margin-top:8px" id="addressActions"></div>
+  `;
   renderAddresses(addressList);
-  // put focus on search on mobile after a small delay
-  setTimeout(()=>{ searchBox.focus(); }, 150);
 }
 
 function renderAddresses(list){
   const listEl = document.getElementById('addrList');
   listEl.innerHTML = '';
-  if (!list || !list.length) { listEl.innerHTML = '<div class="tiny">Адресов нет.</div>'; return; }
+  if (!list || list.length === 0){ listEl.innerHTML = '<div class="tiny">Адресов нет.</div>'; return; }
   list.forEach(addr => {
     const div = document.createElement('div');
     div.className = 'list-item';
@@ -213,26 +223,22 @@ function renderAddresses(list){
   });
 }
 
-/* Debounced search handler */
-function onSearchInput(){
-  clearTimeout(lastSearchTimer);
-  lastSearchTimer = setTimeout(() => {
-    const q = searchBox.value.trim().toLowerCase();
-    const filtered = addressList.filter(a => a.toLowerCase().includes(q));
-    renderAddresses(filtered);
-  }, 180);
+function filterAddresses(){
+  const q = searchBox.value.trim().toLowerCase();
+  const filtered = addressList.filter(a => a.toLowerCase().includes(q));
+  renderAddresses(filtered);
 }
 
-/* ====== Report form ====== */
+/* Open report form */
 function openReportForm(addr){
   setTitle('Нарушение: ' + addr);
-  searchWrap.style.display='none';
+  searchBox.style.display = 'none';
+  showBack(true);
   content.innerHTML = `
-    <div style="margin-top:6px" class="tiny">Адрес: <strong>${addr}</strong></div>
-
-    <div class="form-row">
+    <div style="margin-top:6px" class="tiny">Адрес: <strong>${escapeHtml(addr)}</strong></div>
+    <div style="margin-top:12px">
       <label class="tiny">Тип нарушения</label>
-      <select id="violationType">
+      <select id="violationType" style="width:100%;padding:10px;border-radius:10px;background:var(--card);color:var(--text);border:1px solid rgba(255,255,255,0.03)">
         <option>Мусор</option>
         <option>Сломанные лавочки</option>
         <option>Ямы/Повреждённый асфальт</option>
@@ -242,44 +248,56 @@ function openReportForm(addr){
         <option>Другое</option>
       </select>
     </div>
-
-    <div class="form-row">
+    <div style="margin-top:10px">
       <label class="tiny">Комментарий</label>
-      <textarea id="comment" rows="3" placeholder="Дополнительная информация"></textarea>
+      <textarea id="comment" style="width:100%;min-height:80px;padding:10px;border-radius:10px;background:var(--card);color:var(--text);border:1px solid rgba(255,255,255,0.03)"></textarea>
     </div>
 
     <div class="photo-row">
       <div class="photo-preview" id="photoPreview"><div class="tiny">Фото нет</div></div>
-      <div style="flex:1;min-width:160px">
+      <div style="flex:1;min-width:180px">
         <div class="row">
-          <button class="btn" onclick="triggerCamera()">📷 Сделать фото</button>
-          <button class="btn ghost" onclick="triggerGallery()">📁 Загрузить</button>
+          <button class="btn" id="cameraBtn">📷 Сделать фото</button>
+          <button class="btn ghost" id="galleryBtn">📁 Загрузить</button>
         </div>
         <div style="margin-top:8px" class="row">
-          <button class="btn ghost" onclick="getCoords()">📍 Координаты</button>
-          <button class="btn" onclick="sendReport('${escapeHtml(addr)}')">Отправить</button>
+          <button class="btn ghost" id="coordsBtn">📍 Координаты</button>
+          <button class="btn" id="sendBtn">Отправить</button>
         </div>
         <div id="coordText" class="tiny" style="margin-top:8px;color:var(--muted)"></div>
       </div>
     </div>
-    <div style="margin-top:8px" class="tiny">Фото с timestamp (дата и время) будет автоматически наложено в правом нижнем углу.</div>
+    <div style="margin-top:8px" class="tiny">Фото с timestamp (дата и время) автоматически наложено в правом нижнем углу.</div>
   `;
+
   currentPreviewDataUrl = "";
+
+  // attach handlers (so they work after innerHTML replace)
+  document.getElementById('cameraBtn').addEventListener('click', triggerCamera);
+  document.getElementById('galleryBtn').addEventListener('click', triggerGallery);
+  document.getElementById('coordsBtn').addEventListener('click', getCoords);
+  document.getElementById('sendBtn').addEventListener('click', () => sendReport(addr));
 }
 
-/* ====== Camera & Gallery ====== */
-/* iOS note: iOS Safari may ignore capture attribute and open chooser — that's expected. */
+/* Camera / gallery triggers — handle iOS/Android quirks */
 function triggerCamera(){
-  fileInput.setAttribute('accept','image/*');
-  fileInput.setAttribute('capture','environment'); // ask for back camera
+  // Prefer camera capture on Android. On iOS (in-app WebView) capture attribute often ignored or blocked,
+  // so we remove capture there to allow user choice (works better).
+  fileInput.accept = 'image/*';
+  if (!isIOS()) {
+    fileInput.setAttribute('capture','environment'); // Android generally supports this
+  } else {
+    fileInput.removeAttribute('capture'); // iOS Safari / WebView: let system choose
+  }
   fileInput.click();
 }
 function triggerGallery(){
+  fileInput.accept = 'image/*';
   fileInput.removeAttribute('capture');
-  fileInput.setAttribute('accept','image/*');
   fileInput.click();
 }
 
+/* File input change -> read, draw timestamp on canvas, preview */
 fileInput.addEventListener('change', async (e) => {
   const file = e.target.files && e.target.files[0];
   if (!file) return;
@@ -288,10 +306,14 @@ fileInput.addEventListener('change', async (e) => {
     const watermarked = await addTimestampToImage(dataUrl);
     currentPreviewDataUrl = watermarked;
     showPreviewImage(watermarked);
+    const coordText = document.getElementById('coordText');
+    if (coordText && coordText.textContent.indexOf('Фото готово') === -1) {
+      coordText.textContent = (coordText.textContent || '') + ' • Фото готово';
+    }
   } catch(err){
     alert('Ошибка обработки фото: ' + err.message);
   } finally {
-    fileInput.value = ''; // reset so same file can be reselected
+    fileInput.value = ""; // reset so same file can be selected again later
   }
 });
 
@@ -303,118 +325,89 @@ function readFileAsDataURL(file){
     fr.readAsDataURL(file);
   });
 }
-
 function showPreviewImage(dataUrl){
   const prev = document.getElementById('photoPreview');
   prev.innerHTML = `<img src="${dataUrl}" alt="photo" />`;
-  // optional: tap to open in new tab
-  prev.onclick = () => {
-    const w = window.open();
-    w.document.write('<img src="'+dataUrl+'" style="max-width:100%"/>');
-  };
 }
 
-/* ====== Draw timestamp on image (canvas) ====== */
+/* Add timestamp on canvas (resize + watermark) */
 async function addTimestampToImage(dataUrl){
   return new Promise((res, rej) => {
     const img = new Image();
     img.onload = () => {
       try {
-        // Respect device pixel ratio for drawing clarity
-        const dpr = Math.min(window.devicePixelRatio || 1, 2);
-        // Resize large images to a reasonable max width for upload
-        const maxW = 1400;
+        // Responsive resize
+        const maxW = 1200;
         let w = img.width, h = img.height;
         if (w > maxW) {
-          const r = maxW / w;
-          w = Math.round(w * r);
-          h = Math.round(h * r);
+          const ratio = maxW / w;
+          w = Math.round(w * ratio);
+          h = Math.round(h * ratio);
         }
         const canvas = document.createElement('canvas');
-        canvas.width = w * dpr;
-        canvas.height = h * dpr;
-        canvas.style.width = w + 'px';
-        canvas.style.height = h + 'px';
+        canvas.width = w;
+        canvas.height = h;
         const ctx = canvas.getContext('2d');
-        ctx.setTransform(dpr,0,0,dpr,0,0);
         ctx.drawImage(img, 0, 0, w, h);
 
-        // Timestamp text (device local time)
+        // Timestamp
         const now = new Date();
-        const ts = now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate())
-                  + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes());
+        const ts = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
 
-        // Font and metrics
-        const fontSize = Math.max(12, Math.round(w * 0.03)); // responsive
-        ctx.font = `${fontSize}px -apple-system, Roboto, Arial`;
+        // Font responsive
+        const fontSize = Math.max(12, Math.round(w * 0.035));
+        ctx.font = `${fontSize}px Arial`;
         ctx.textBaseline = 'bottom';
-        const textMetrics = ctx.measureText(ts);
-        const textW = textMetrics.width;
-        const padding = Math.round(fontSize * 0.6);
+        const metrics = ctx.measureText(ts);
+        const textW = metrics.width;
+        const padding = Math.round(fontSize * 0.5);
+        const x = w - textW - padding - 8;
+        const y = h - 8;
 
-        // Coordinates for box & text (right-bottom)
-        const x = w - textW - padding - 10;
-        const y = h - 10;
+        // Draw box
+        const boxH = fontSize + padding;
+        ctx.fillStyle = 'rgba(0,0,0,0.45)';
+        ctx.fillRect(x - padding/1.2, y - boxH, textW + padding*2, boxH + 4);
 
-        // Draw dark semi-transparent box with rounded corners
-        const boxW = textW + padding*2;
-        const boxH = fontSize + padding*0.6;
-        const boxX = x - padding;
-        const boxY = y - boxH + 6;
-
-        // rounded rect
-        roundRect(ctx, boxX, boxY, boxW, boxH, Math.max(6, Math.round(fontSize*0.3)), 'rgba(0,0,0,0.45)');
-
-        // Text
+        // Draw text
         ctx.fillStyle = 'rgba(255,255,255,0.95)';
-        ctx.fillText(ts, x, y - 6);
+        ctx.fillText(ts, x, y - 2);
 
-        // Export JPEG compressed
-        const out = canvas.toDataURL('image/jpeg', 0.82);
+        // toDataURL (jpeg)
+        const out = canvas.toDataURL('image/jpeg', 0.8);
         res(out);
-      } catch(e){
-        rej(e);
-      }
+      } catch(e) { rej(e); }
     };
-    img.onerror = () => rej(new Error('Не удалось загрузить изображение (проверь формат)'));
+    img.onerror = () => rej(new Error('Не удалось загрузить фотографию для обработки'));
     img.src = dataUrl;
   });
 }
-
-function roundRect(ctx, x, y, w, h, r, fillStyle){
-  ctx.beginPath();
-  ctx.moveTo(x+r, y);
-  ctx.arcTo(x+w, y, x+w, y+h, r);
-  ctx.arcTo(x+w, y+h, x, y+h, r);
-  ctx.arcTo(x, y+h, x, y, r);
-  ctx.arcTo(x, y, x+w, y, r);
-  ctx.closePath();
-  ctx.fillStyle = fillStyle;
-  ctx.fill();
-}
-
 function pad(n){ return (n < 10 ? '0' : '') + n; }
 
-/* ====== Geolocation ====== */
+/* Geolocation */
 function getCoords(){
   const coordText = document.getElementById('coordText');
+  if (!coordText) return;
   coordText.textContent = 'Запрашиваю координаты...';
-  if (!navigator.geolocation) { coordText.textContent = 'Геолокация не поддерживается'; return; }
+  if (!navigator.geolocation){
+    coordText.textContent = 'Геолокация не поддерживается';
+    return;
+  }
   navigator.geolocation.getCurrentPosition(pos => {
-    const lat = pos.coords.latitude.toFixed(6);
-    const lon = pos.coords.longitude.toFixed(6);
-    coordText.textContent = 'Координаты: ' + lat + ',' + lon;
+    const lat = pos.coords.latitude.toFixed(6), lon = pos.coords.longitude.toFixed(6);
+    coordText.textContent = `Координаты: ${lat},${lon}`;
   }, err => {
-    coordText.textContent = 'Ошибка: ' + err.message;
-  }, { enableHighAccuracy:true, timeout:10000 });
+    coordText.textContent = 'Ошибка получения координат: ' + err.message;
+  }, { enableHighAccuracy: true, timeout:10000 });
 }
 
-/* ====== Send report ====== */
+/* Send report - тест: если ?webhook= указан, отправит POST */
 async function sendReport(addr){
   const violation = document.getElementById('violationType').value;
   const comment = document.getElementById('comment').value;
-  const coords = (document.getElementById('coordText').textContent || '').replace('Координаты: ','');
-  if (!currentPreviewDataUrl) { alert('Добавь фото'); return; }
+  const coordText = document.getElementById('coordText');
+  const coords = coordText ? (coordText.textContent.replace('Координаты: ','') || '') : '';
+  if (!currentPreviewDataUrl){ alert('Добавь фото'); return; }
 
   const payload = {
     timestamp: new Date().toISOString(),
@@ -425,36 +418,35 @@ async function sendReport(addr){
     violation,
     comment,
     coords,
-    photo_base64: currentPreviewDataUrl // data URL (jpeg)
+    photo_base64: currentPreviewDataUrl
   };
 
   const webhook = getQueryParam('webhook') || '';
-  if (!webhook) {
+  if (!webhook){
     console.log('Payload (test):', payload);
-    alert('Данные сформированы локально (тест). Если хочешь отправлять на сервер — добавь ?webhook=YOUR_URL в адрес мини-аппа.');
+    alert('Данные собраны локально (тест). Для отправки укажи ?webhook=YOUR_URL в ссылке мини-аппа.');
     return;
   }
 
   try {
     const res = await fetch(webhook, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
     if (!res.ok) throw new Error('HTTP ' + res.status);
-    const json = await res.json().catch(()=>({status:'ok'}));
-    alert('Отправлено: ' + (json.status || 'ok'));
+    alert('Отправлено успешно');
     goBack();
-  } catch(err){
-    alert('Ошибка отправки: ' + err.message);
+  } catch(e){
+    alert('Ошибка отправки: ' + e.message);
   }
 }
 
-/* ====== Utility: open extra placeholders ====== */
-function openExtra(name){ alert('Раздел «' + name + '» пока не настроен. Можем добавить.'); }
+/* Utilities */
+function getQueryParam(name){
+  return new URLSearchParams(location.search).get(name);
+}
+function openExtra(name){ alert('Раздел «' + name + '» пока не настроен.'); }
+function escapeHtml(text){ return String(text).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-/* ====== Init ====== */
+/* Init */
 showStart();
-
-/* ====== Expose small helpers for console debugging ====== */
-window._miniapp = { loadRegistry, showStart, showOkrugs, showBalances, showAddresses };
-
 </script>
 </body>
 </html>
