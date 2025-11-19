@@ -141,7 +141,11 @@ function showStart(){
 /* Load registry (dt/odh) from /data/ — убедись, что dt.json/odh.json в /data/ (как в репо). */
 async function loadRegistry(type){
   selectedType = type;
-  const path = type === 'ДТ' ? 'data/dt.json' : 'data/odh.json';
+  const ROOT = "https://taykov1-debug.github.io/telegram-miniapp";
+
+const path = type === 'ДТ'
+  ? ROOT + "/data/dt.json"
+  : ROOT + "/data/odh.json";
   setTitle('Загрузка реестра...');
   try {
     const res = await fetch(path, {cache:'no-cache'});
